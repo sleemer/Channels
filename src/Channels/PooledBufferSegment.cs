@@ -6,7 +6,6 @@ using System.Text;
 
 namespace Channels
 {
-    // TODO: Pool segments
     internal class PooledBufferSegment : IDisposable
     {
         /// <summary>
@@ -35,8 +34,7 @@ namespace Channels
         /// memory is shrunk when bytes are consumed, Start is increased, and blocks are returned to the pool.
         /// </summary>
         public PooledBufferSegment Next;
-
-
+        
         /// <summary>
         /// If true, data should not be written into the backing block after the End offset. Data between start and end should never be modified
         /// since this would break cloning.
@@ -44,23 +42,25 @@ namespace Channels
         public bool ReadOnly;
 
         public int Length => End - Start;
-
-
-        // Leasing ctor
-        public PooledBufferSegment(PooledBuffer buffer)
+        
+        // Leasing initializer
+        internal void Initialize(PooledBuffer buffer)
         {
             Buffer = buffer;
             Start = 0;
             End = 0;
+            ReadOnly = false;
+            Next = null;
         }
 
-        // Cloning ctor
-        private PooledBufferSegment(PooledBuffer buffer, int start, int end)
+        // Cloning initializer
+        internal void Initialize(PooledBuffer buffer, int start, int end)
         {
             Buffer = buffer;
             Start = start;
             End = end;
             ReadOnly = true;
+            Next = null;
 
             Buffer.AddReference();
         }
@@ -69,7 +69,6 @@ namespace Channels
         {
             Buffer.RemoveReference();
         }
-
 
         /// <summary>
         /// ToString overridden for debugger convenience. This displays the "active" byte information in this block as ASCII characters.
@@ -87,31 +86,31 @@ namespace Channels
             return builder.ToString();
         }
 
-        public static PooledBufferSegment Clone(ReadCursor beginBuffer, ReadCursor endBuffer, out PooledBufferSegment lastSegment)
+        public static PooledBufferSegment Clone(ISegmentPool segmentPool,ReadCursor beginBuffer, ReadCursor endBuffer, out PooledBufferSegment lastSegment)
         {
             var beginOrig = beginBuffer.Segment;
             var endOrig = endBuffer.Segment;
 
             if (beginOrig == endOrig)
             {
-                lastSegment = new PooledBufferSegment(beginOrig.Buffer, beginBuffer.Index, endBuffer.Index);
+                lastSegment = segmentPool.Lease(beginOrig.Buffer, beginBuffer.Index, endBuffer.Index);
                 return lastSegment;
             }
 
-            var beginClone = new PooledBufferSegment(beginOrig.Buffer, beginBuffer.Index, beginOrig.End);
+            var beginClone = segmentPool.Lease(beginOrig.Buffer, beginBuffer.Index, beginOrig.End);
             var endClone = beginClone;
 
             beginOrig = beginOrig.Next;
 
             while (beginOrig != endOrig)
             {
-                endClone.Next = new PooledBufferSegment(beginOrig.Buffer, beginOrig.Start, beginOrig.End);
+                endClone.Next = segmentPool.Lease(beginOrig.Buffer, beginOrig.Start, beginOrig.End);
 
                 endClone = endClone.Next;
                 beginOrig = beginOrig.Next;
             }
 
-            lastSegment = new PooledBufferSegment(endOrig.Buffer, endOrig.Start, endBuffer.Index);
+            lastSegment = segmentPool.Lease(endOrig.Buffer, endOrig.Start, endBuffer.Index);
             endClone.Next = lastSegment;
 
             return beginClone;

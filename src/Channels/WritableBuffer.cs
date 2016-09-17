@@ -12,7 +12,6 @@ namespace Channels
     /// </summary>
     public struct WritableBuffer
     {
-        private IBufferPool _pool;
         private Channel _channel;
 
         // the "tail" is the **end** of the data that we're writing - essentially the
@@ -29,10 +28,9 @@ namespace Channels
         private bool _comitted;
         private int _bufferSize;
 
-        internal WritableBuffer(Channel channel, IBufferPool pool, PooledBufferSegment segment, int bufferSize)
+        internal WritableBuffer(Channel channel, PooledBufferSegment segment, int bufferSize)
         {
             _channel = channel;
-            _pool = pool;
 
             _tail = segment;
             _tailIndex = segment?.End ?? 0;
@@ -85,7 +83,7 @@ namespace Channels
 
             if (_tail == null)
             {
-                _tail = new PooledBufferSegment(_pool.Lease(_bufferSize));
+                _tail = _channel.SegmentPool.Lease(_channel.BufferPool.Lease(_bufferSize));
                 _tailIndex = _tail.End;
                 _head = _tail;
                 _headIndex = _tail.Start;
@@ -102,8 +100,8 @@ namespace Channels
             // If inadequate bytes left or if the segment is readonly
             if (bytesLeftInBuffer == 0 || bytesLeftInBuffer < count || segment.ReadOnly)
             {
-                var nextBuffer = _pool.Lease(_bufferSize);
-                var nextSegment = new PooledBufferSegment(nextBuffer);
+                var nextBuffer = _channel.BufferPool.Lease(_bufferSize);
+                var nextSegment = _channel.SegmentPool.Lease(nextBuffer);
                 segment.End = bufferIndex;
                 segment.Next = nextSegment;
                 segment = nextSegment;
@@ -166,7 +164,7 @@ namespace Channels
         public void Append(ref ReadableBuffer buffer)
         {
             PooledBufferSegment clonedEnd;
-            var clonedBegin = PooledBufferSegment.Clone(buffer.Start, buffer.End, out clonedEnd);
+            var clonedBegin = PooledBufferSegment.Clone(_channel.SegmentPool, buffer.Start, buffer.End, out clonedEnd);
 
             if (_tail == null)
             {

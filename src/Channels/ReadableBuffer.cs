@@ -81,7 +81,7 @@ namespace Channels
             var end = buffer._end;
 
             PooledBufferSegment segmentTail;
-            var segmentHead = PooledBufferSegment.Clone(begin, end, out segmentTail);
+            var segmentHead = PooledBufferSegment.Clone(_channel.SegmentPool, begin, end, out segmentTail);
 
             begin = new ReadCursor(segmentHead);
             end = new ReadCursor(segmentTail, segmentTail.End);

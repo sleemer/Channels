@@ -11,7 +11,8 @@ namespace Channels
 
         public ReadableChannel(IBufferPool pool)
         {
-            _channel = new Channel(pool);
+            // TODO: this is not right
+            _channel = new Channel(pool, new SegmentPool());
         }
 
         public Task Completion => ((IReadableChannel)_channel).Completion;

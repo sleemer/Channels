@@ -18,7 +18,8 @@ namespace Channels
 
         private static Task _completedTask = Task.FromResult(0);
 
-        private readonly IBufferPool _pool;
+        internal IBufferPool BufferPool { get; }
+        internal ISegmentPool SegmentPool { get; }
 
         private Action _awaitableState;
 
@@ -38,9 +39,19 @@ namespace Channels
         /// Initializes the <see cref="Channel"/> with the specifed <see cref="IBufferPool"/>.
         /// </summary>
         /// <param name="pool"></param>
-        public Channel(IBufferPool pool)
+        public Channel(IBufferPool pool) : this(pool, new SegmentPool())
         {
-            _pool = pool;
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="Channel"/> with the specifed <see cref="IBufferPool"/>.
+        /// </summary>
+        /// <param name="pool"></param>
+        /// <param name="segmentPool"></param>
+        internal Channel(IBufferPool pool, ISegmentPool segmentPool)
+        {
+            BufferPool = pool;
+            SegmentPool = segmentPool;
             _awaitableState = _awaitableIsNotCompleted;
         }
 
@@ -97,7 +108,7 @@ namespace Channels
             if (segment == null && minimumSize > 0)
             {
                 // We're out of tail space so lease a new segment only if the requested size > 0
-                segment = new PooledBufferSegment(_pool.Lease(bufferSize));
+                segment = SegmentPool.Lease(BufferPool.Lease(bufferSize));
             }
 
             lock (_sync)
@@ -113,7 +124,7 @@ namespace Channels
                     _tail = segment;
                 }
 
-                return new WritableBuffer(this, _pool, segment, bufferSize);
+                return new WritableBuffer(this, segment, bufferSize);
             }
         }
 
@@ -356,6 +367,7 @@ namespace Channels
                     segment = segment.Next;
 
                     returnSegment.Dispose();
+                    SegmentPool.Return(returnSegment);
                 }
 
                 _head = null;
