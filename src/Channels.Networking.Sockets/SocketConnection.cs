@@ -185,7 +185,7 @@ namespace Channels.Networking.Sockets
                     bool flushed = false;
                     try
                     {
-                        SetBuffer(buffer.Memory, args);
+                        SetBuffer(buffer.RawMemory, args);
                         if (Socket.ReceiveAsync(args)) //  initiator calls ReceiveAsync
                         {
                             // wait async for the io work to be completed
@@ -257,9 +257,9 @@ namespace Channels.Networking.Sockets
                         {
                             break;
                         }
-                        foreach (var span in buffer)
+                        foreach (var memory in buffer.RawMemory)
                         {
-                            SetBuffer(span, args);
+                            SetBuffer(memory, args);
 
                             if (Socket.SendAsync(args)) //  initiator calls SendAsync
                             {
@@ -275,7 +275,7 @@ namespace Channels.Networking.Sockets
                             {
                                 throw new SocketException((int)args.SocketError);
                             }
-                            if (args.BytesTransferred != span.Length)
+                            if (args.BytesTransferred != memory.Length)
                             {
                                 throw new NotImplementedException("We didn't send everything; oops!");
                             }
@@ -310,11 +310,10 @@ namespace Channels.Networking.Sockets
         }
 
         // unsafe+async not good friends
-        private unsafe void SetBuffer(Span<byte> span, SocketAsyncEventArgs args)
+        private unsafe void SetBuffer(Memory memory, SocketAsyncEventArgs args)
         {
             ArraySegment<byte> segment;
-            void* ignoredPointer;
-            if (!span.TryGetArrayElseGetPointer(out segment, out ignoredPointer))
+            if (!memory.TryGetArray(out segment))
             {
                 throw new InvalidOperationException("Memory is not backed by an array; oops!");
             }

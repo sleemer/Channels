@@ -10,7 +10,7 @@ namespace Channels
     {
         private int _referenceCount = 1;
 
-        public abstract Span<byte> Data { get; }
+        public abstract Memory Data { get; }
 
         protected abstract void DisposeBuffer();
 

@@ -17,7 +17,7 @@ namespace Channels
     {
         private static readonly int VectorWidth = Vector<byte>.Count;
 
-        private readonly BufferSpan _span;
+        private readonly Memory _span;
         private readonly bool _isOwner;
 
         private ReadCursor _start;
@@ -42,7 +42,12 @@ namespace Channels
         /// <summary>
         /// The first <see cref="Span{Byte}"/> in the <see cref="ReadableBuffer"/>.
         /// </summary>
-        public Span<byte> FirstSpan => _span.Data;
+        public Span<byte> FirstSpan => _span;
+
+        /// <summary>
+        /// The first piece of raw <see cref="Memory"/> in the <see cref="ReadableBuffer"/>.
+        /// </summary>
+        public Memory FirstMemory => _span;
 
         /// <summary>
         /// A cursor to the start of the <see cref="ReadableBuffer"/>.
@@ -88,18 +93,6 @@ namespace Channels
             _span = buffer._span;
 
             _length = buffer._length;
-        }
-
-        /// <summary>
-        /// Returns an enumerable of <see cref="Span{Byte}"/>
-        /// </summary>
-        /// <returns>An enumerable of <see cref="Span{Byte}"/></returns>
-        public IEnumerable<Span<byte>> AsEnumerable()
-        {
-            foreach (var span in this)
-            {
-                yield return span;
-            }
         }
 
         /// <summary>
@@ -403,10 +396,12 @@ namespace Channels
         /// <summary>
         /// Returns an enumerator over the <see cref="ReadableBuffer"/>
         /// </summary>
-        public Enumerator GetEnumerator()
+        public SpanEnumerator GetEnumerator()
         {
-            return new Enumerator(ref this);
+            return new SpanEnumerator(ref this);
         }
+
+        public MemoryEnumerable RawMemory => new MemoryEnumerable(ref this);
 
         /// <summary>
         /// Checks to see if the <see cref="ReadableBuffer"/> starts with the specified <see cref="Span{Byte}"/>.
@@ -509,63 +504,6 @@ namespace Channels
                 return offset + 7;
             }
             throw new InvalidOperationException();
-        }
-
-        /// <summary>
-        /// An enumerator over the <see cref="ReadableBuffer"/>
-        /// </summary>
-        public struct Enumerator : IEnumerator<Span<byte>>
-        {
-            private ReadableBuffer _buffer;
-            private BufferSpan _current;
-
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <param name="buffer"></param>
-            public Enumerator(ref ReadableBuffer buffer)
-            {
-                _buffer = buffer;
-                _current = default(BufferSpan);
-            }
-
-            /// <summary>
-            /// The current <see cref="Span{Byte}"/>
-            /// </summary>
-            public Span<byte> Current => _current.Data;
-
-            object IEnumerator.Current
-            {
-                get { return _current; }
-            }
-
-            /// <summary>
-            /// 
-            /// </summary>
-            public void Dispose()
-            {
-
-            }
-
-            /// <summary>
-            /// Moves to the next <see cref="Span{Byte}"/> in the <see cref="ReadableBuffer"/>
-            /// </summary>
-            /// <returns></returns>
-            public bool MoveNext()
-            {
-                var start = _buffer.Start;
-                var moved = start.TryGetBuffer(_buffer.End, out _current, out start);
-                _buffer = _buffer.Slice(start);
-                return moved;
-            }
-
-            /// <summary>
-            /// 
-            /// </summary>
-            public void Reset()
-            {
-                throw new NotSupportedException();
-            }
         }
     }
 }
