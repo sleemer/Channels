@@ -217,7 +217,7 @@ namespace Channels.Tests
                 Assert.False(buffer.IsSingleSpan);
                 var helloBuffer = buffer.Slice(blockSize - 5);
                 Assert.False(helloBuffer.IsSingleSpan);
-                var memory = new List<Memory>();
+                var memory = new List<Memory<byte>>();
                 foreach (var m in helloBuffer)
                 {
                     memory.Add(m);

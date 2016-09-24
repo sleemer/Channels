@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Channels
 {
-    public struct Memory
+    public struct Memory<T>
     {
-        private readonly byte[] _array;
+        private readonly T[] _array;
         private readonly int _offset;
-        private readonly unsafe byte* _memory;
+        private readonly unsafe void* _memory;
         private readonly int _memoryLength;
 
-        public Memory(ArraySegment<byte> segment)
+        public Memory(ArraySegment<T> segment)
         {
             _array = segment.Array;
             _offset = segment.Offset;
@@ -24,7 +25,7 @@ namespace Channels
             _memoryLength = segment.Count;
         }
 
-        public unsafe Memory(byte* pointer, int length)
+        public unsafe Memory(void* pointer, int length)
         {
             unsafe
             {
@@ -36,7 +37,7 @@ namespace Channels
             _memoryLength = length;
         }
 
-        public unsafe Memory(byte[] array, int offset, int length, byte* pointer = null)
+        public unsafe Memory(T[] array, int offset, int length, void* pointer = null)
         {
             unsafe
             {
@@ -48,13 +49,13 @@ namespace Channels
             _memoryLength = length;
         }
 
-        public Span<byte> Span => this;
+        public Span<T> Span => this;
 
-        public static implicit operator Span<byte>(Memory memory)
+        public static implicit operator Span<T>(Memory<T> memory)
         {
             if (memory.Length == 0)
             {
-                return Span<byte>.Empty;
+                return Span<T>.Empty;
             }
 
             if (memory._array != null)
@@ -65,34 +66,34 @@ namespace Channels
             {
                 unsafe
                 {
-                    return new Span<byte>(memory._memory, memory._memoryLength);
+                    return new Span<T>(memory._memory, memory._memoryLength);
                 }
             }
         }
 
-        public unsafe byte* UnsafePointer => _memory + _offset;
+        public unsafe void* UnsafePointer => (byte*)_memory + (Unsafe.SizeOf<T>() * _offset);
 
         public int Length => _memoryLength;
 
-        public unsafe Memory Slice(int offset, int length)
+        public unsafe Memory<T> Slice(int offset, int length)
         {
             // TODO: Bounds check
             if (_array == null)
             {
-                return new Memory(_memory + offset, length);
+                return new Memory<T>((byte*)_memory + (Unsafe.SizeOf<T>() * offset), length);
             }
 
-            return new Memory(_array, _offset + offset, length, _memory);
+            return new Memory<T>(_array, _offset + offset, length, _memory);
         }
 
-        public bool TryGetArray(out ArraySegment<byte> buffer)
+        public bool TryGetArray(out ArraySegment<T> buffer)
         {
             if (_array == null)
             {
-                buffer = default(ArraySegment<byte>);
+                buffer = default(ArraySegment<T>);
                 return false;
             }
-            buffer = new ArraySegment<byte>(_array, _offset, Length);
+            buffer = new ArraySegment<T>(_array, _offset, Length);
             return true;
         }
     }

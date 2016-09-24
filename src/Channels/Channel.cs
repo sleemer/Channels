@@ -80,7 +80,7 @@ namespace Channels
 
         internal Span<byte> Memory => RawMemory;
 
-        internal Memory RawMemory => _writingHead == null ? default(Memory) : _writingHead.Buffer.Data.Slice(_writingHead.End, _writingHead.Buffer.Data.Length - _writingHead.End);
+        internal Memory<byte> RawMemory => _writingHead == null ? default(Memory<byte>) : _writingHead.Buffer.Data.Slice(_writingHead.End, _writingHead.Buffer.Data.Length - _writingHead.End);
 
         /// <summary>
         /// Allocates memory from the channel to write into.

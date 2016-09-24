@@ -63,7 +63,7 @@ namespace Channels.Networking.Windows.RIO
         private void ProcessReceives()
         {
             _buffer = _input.Alloc(2048);
-            var receiveBufferSeg = GetSegmentFromSpan(_buffer.RawMemory);
+            var receiveBufferSeg = GetSegmentFromMemory(_buffer.RawMemory);
 
             if (!_rio.RioReceive(_requestQueue, ref receiveBufferSeg, 1, RioReceiveFlags.None, 0))
             {
@@ -109,16 +109,16 @@ namespace Channels.Networking.Windows.RIO
             _output.CompleteReader();
         }
 
-        private Task SendAsync(Memory span, bool endOfMessage)
+        private Task SendAsync(Memory<byte> memory, bool endOfMessage)
         {
             if (!IsReadyToSend)
             {
-                return SendAsyncAwaited(span, endOfMessage);
+                return SendAsyncAwaited(memory, endOfMessage);
             }
 
             var flushSends = endOfMessage || MaxOutstandingSendsReached;
 
-            Send(GetSegmentFromSpan(span), flushSends);
+            Send(GetSegmentFromMemory(memory), flushSends);
 
             if (flushSends && !endOfMessage)
             {
@@ -128,13 +128,13 @@ namespace Channels.Networking.Windows.RIO
             return _completedTask;
         }
 
-        private async Task SendAsyncAwaited(Memory memory, bool endOfMessage)
+        private async Task SendAsyncAwaited(Memory<byte> memory, bool endOfMessage)
         {
             await ReadyToSend;
 
             var flushSends = endOfMessage || MaxOutstandingSendsReached;
 
-            Send(GetSegmentFromSpan(memory), flushSends);
+            Send(GetSegmentFromMemory(memory), flushSends);
 
             if (flushSends && !endOfMessage)
             {
@@ -217,7 +217,7 @@ namespace Channels.Networking.Windows.RIO
             _buffer.FlushAsync();
         }
 
-        private unsafe RioBufferSegment GetSegmentFromSpan(Memory memory)
+        private unsafe RioBufferSegment GetSegmentFromMemory(Memory<byte> memory)
         {
             var spanPtr = (IntPtr)memory.UnsafePointer;
             long startAddress;

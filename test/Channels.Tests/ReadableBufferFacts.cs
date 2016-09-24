@@ -235,7 +235,7 @@ namespace Channels.Tests
 
         private unsafe void TestValue(ref ReadableBuffer readBuffer, ulong value)
         {
-            byte* ptr = readBuffer.First.UnsafePointer;
+            var ptr = (byte*)readBuffer.First.UnsafePointer;
             string s = value.ToString(CultureInfo.InvariantCulture);
             int written;
             fixed (char* c = s)

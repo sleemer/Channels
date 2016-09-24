@@ -7,10 +7,10 @@ namespace Channels
     /// <summary>
     /// An enumerator over the <see cref="ReadableBuffer"/>
     /// </summary>
-    public struct MemoryEnumerator : IEnumerator<Memory>
+    public struct MemoryEnumerator
     {
         private ReadableBuffer _buffer;
-        private Memory _current;
+        private Memory<byte> _current;
 
         /// <summary>
         /// 
@@ -19,18 +19,13 @@ namespace Channels
         public MemoryEnumerator(ref ReadableBuffer buffer)
         {
             _buffer = buffer;
-            _current = default(Memory);
+            _current = default(Memory<byte>);
         }
 
         /// <summary>
         /// The current <see cref="Span{Byte}"/>
         /// </summary>
-        public Memory Current => _current;
-
-        object IEnumerator.Current
-        {
-            get { return _current; }
-        }
+        public Memory<byte> Current => _current;
 
         /// <summary>
         /// 

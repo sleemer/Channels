@@ -138,7 +138,7 @@ namespace Channels.Text.Primitives
 
                 foreach (var memory in buffer)
                 {
-                    if (!AsciiUtilities.TryGetAsciiString(memory.UnsafePointer, output + offset, memory.Length))
+                    if (!AsciiUtilities.TryGetAsciiString((byte*)memory.UnsafePointer, output + offset, memory.Length))
                     {
                         throw new InvalidOperationException();
                     }

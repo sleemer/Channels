@@ -14,7 +14,7 @@ namespace Channels
         private readonly int _offset;
         private readonly int _length;
 
-        public override Memory Data { get; }
+        public override Memory<byte> Data { get; }
 
         /// <summary>
         /// This object cannot be instantiated outside of the static Create method
@@ -23,7 +23,7 @@ namespace Channels
         {
             _offset = offset;
             _length = length;
-            Data = new Memory(slab.Array, offset, length, (byte*)slab.NativePointer);
+            Data = new Memory<byte>(slab.Array, offset, length, (byte*)slab.NativePointer);
 
             Pool = pool;
             Slab = slab;

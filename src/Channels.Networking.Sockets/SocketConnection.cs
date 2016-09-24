@@ -311,7 +311,7 @@ namespace Channels.Networking.Sockets
         }
 
         // unsafe+async not good friends
-        private unsafe void SetBuffer(Memory memory, SocketAsyncEventArgs args)
+        private unsafe void SetBuffer(Memory<byte> memory, SocketAsyncEventArgs args)
         {
             ArraySegment<byte> segment;
             if (!memory.TryGetArray(out segment))

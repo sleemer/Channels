@@ -17,7 +17,7 @@ namespace Channels
     {
         private static readonly int VectorWidth = Vector<byte>.Count;
 
-        private readonly Memory _first;
+        private readonly Memory<byte> _first;
         private readonly bool _isOwner;
 
         private ReadCursor _start;
@@ -42,7 +42,7 @@ namespace Channels
         /// <summary>
         /// The first <see cref="Memory"/> in the <see cref="ReadableBuffer"/>.
         /// </summary>
-        public Memory First => _first;
+        public Memory<byte> First => _first;
 
         /// <summary>
         /// A cursor to the start of the <see cref="ReadableBuffer"/>.
