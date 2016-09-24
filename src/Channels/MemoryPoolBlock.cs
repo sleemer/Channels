@@ -14,8 +14,6 @@ namespace Channels
         private readonly int _offset;
         private readonly int _length;
 
-        private Memory _memory;
-
         public override Memory Data { get; }
 
         /// <summary>
@@ -25,7 +23,7 @@ namespace Channels
         {
             _offset = offset;
             _length = length;
-            _memory = new Memory(slab.Array, offset, length, (byte*)slab.NativePointer);
+            Data = new Memory(slab.Array, offset, length, (byte*)slab.NativePointer);
 
             Pool = pool;
             Slab = slab;
