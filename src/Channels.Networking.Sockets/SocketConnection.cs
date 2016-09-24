@@ -84,7 +84,7 @@ namespace Channels.Networking.Sockets
                 obj = new SocketAsyncEventArgs();
                 obj.Completed += _asyncCompleted; // only for new, otherwise multi-fire
             }
-            if(obj.UserToken is Signal)
+            if (obj.UserToken is Signal)
             {
                 ((Signal)obj.UserToken).Reset();
             }
@@ -257,7 +257,8 @@ namespace Channels.Networking.Sockets
                         {
                             break;
                         }
-                        foreach (var memory in buffer.RawMemory)
+
+                        foreach (var memory in buffer)
                         {
                             SetBuffer(memory, args);
 

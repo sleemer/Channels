@@ -17,7 +17,7 @@ namespace Channels
     {
         private static readonly int VectorWidth = Vector<byte>.Count;
 
-        private readonly Memory _span;
+        private readonly Memory _first;
         private readonly bool _isOwner;
 
         private ReadCursor _start;
@@ -42,12 +42,7 @@ namespace Channels
         /// <summary>
         /// The first <see cref="Span{Byte}"/> in the <see cref="ReadableBuffer"/>.
         /// </summary>
-        public Span<byte> FirstSpan => _span;
-
-        /// <summary>
-        /// The first piece of raw <see cref="Memory"/> in the <see cref="ReadableBuffer"/>.
-        /// </summary>
-        public Memory FirstMemory => _span;
+        public Memory First => _first;
 
         /// <summary>
         /// A cursor to the start of the <see cref="ReadableBuffer"/>.
@@ -71,7 +66,7 @@ namespace Channels
             _end = end;
             _isOwner = isOwner;
 
-            start.TryGetBuffer(end, out _span, out start);
+            start.TryGetBuffer(end, out _first, out start);
 
             _length = -1;
         }
@@ -90,7 +85,7 @@ namespace Channels
             _start = begin;
             _end = end;
             _isOwner = true;
-            _span = buffer._span;
+            _first = buffer._first;
 
             _length = buffer._length;
         }
@@ -174,7 +169,7 @@ namespace Channels
 
             foreach (var span in this)
             {
-                var currentSpan = span;
+                var currentSpan = span.Span;
                 var found = false;
 
                 if (Vector.IsHardwareAccelerated)
@@ -298,7 +293,7 @@ namespace Channels
                 return -1;
             }
 
-            var span = FirstSpan;
+            var span = First.Span;
             return span[0];
         }
 
@@ -322,10 +317,10 @@ namespace Channels
                 throw new ArgumentOutOfRangeException(nameof(destination));
             }
 
-            foreach (var span in this)
+            foreach (var memory in this)
             {
-                span.TryCopyTo(destination);
-                destination = destination.Slice(span.Length);
+                memory.Span.TryCopyTo(destination);
+                destination = destination.Slice(memory.Length);
             }
         }
 
@@ -383,9 +378,9 @@ namespace Channels
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var span in this)
+            foreach (var memory in this)
             {
-                foreach (var b in span)
+                foreach (var b in memory.Span)
                 {
                     sb.Append((char)b);
                 }
@@ -396,12 +391,10 @@ namespace Channels
         /// <summary>
         /// Returns an enumerator over the <see cref="ReadableBuffer"/>
         /// </summary>
-        public SpanEnumerator GetEnumerator()
+        public MemoryEnumerator GetEnumerator()
         {
-            return new SpanEnumerator(ref this);
+            return new MemoryEnumerator(ref this);
         }
-
-        public MemoryEnumerable RawMemory => new MemoryEnumerable(ref this);
 
         /// <summary>
         /// Checks to see if the <see cref="ReadableBuffer"/> starts with the specified <see cref="Span{Byte}"/>.
@@ -433,18 +426,18 @@ namespace Channels
 
             if (IsSingleSpan)
             {
-                return FirstSpan.BlockEquals(value);
+                return First.Span.BlockEquals(value);
             }
 
-            foreach (var span in this)
+            foreach (var memory in this)
             {
-                var compare = value.Slice(0, span.Length);
-                if (!span.BlockEquals(compare))
+                var compare = value.Slice(0, memory.Length);
+                if (!memory.Span.BlockEquals(compare))
                 {
                     return false;
                 }
 
-                value = value.Slice(span.Length);
+                value = value.Slice(memory.Length);
             }
             return true;
         }

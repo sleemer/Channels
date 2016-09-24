@@ -85,7 +85,7 @@ namespace Channels
                         return;
                     }
 
-                    foreach (var memory in inputBuffer.RawMemory)
+                    foreach (var memory in inputBuffer)
                     {
                         ArraySegment<byte> buffer;
 

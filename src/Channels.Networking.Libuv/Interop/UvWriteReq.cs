@@ -74,13 +74,13 @@ namespace Channels.Networking.Libuv.Interop
 
                 if (nBuffers == 1)
                 {
-                    var memory = buffer.FirstMemory;
+                    var memory = buffer.First;
                     pBuffers[0] = Libuv.buf_init((IntPtr)memory.UnsafePointer, memory.Length);
                 }
                 else
                 {
                     int i = 0;
-                    foreach (var memory in buffer.RawMemory)
+                    foreach (var memory in buffer)
                     {
                         pBuffers[i++] = Libuv.buf_init((IntPtr)memory.UnsafePointer, memory.Length);
                     }

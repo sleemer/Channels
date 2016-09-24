@@ -59,7 +59,7 @@ namespace Channels.Samples.IO.Compression
                     }
 
                     var writerBuffer = output.Alloc(2048);
-                    var memory = inputBuffer.FirstMemory;
+                    var memory = inputBuffer.First;
 
                     unsafe
                     {
@@ -149,7 +149,7 @@ namespace Channels.Samples.IO.Compression
                     }
 
                     var writerBuffer = output.Alloc(2048);
-                    var memory = inputBuffer.FirstMemory;
+                    var memory = inputBuffer.First;
                     if (memory.Length > 0)
                     {
                         unsafe

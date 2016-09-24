@@ -82,7 +82,7 @@ namespace Channels.Networking.Windows.RIO
                     break;
                 }
 
-                var enumerator = buffer.RawMemory.GetEnumerator();
+                var enumerator = buffer.GetEnumerator();
 
                 if (enumerator.MoveNext())
                 {

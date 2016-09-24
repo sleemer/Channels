@@ -4,20 +4,6 @@ using System.Collections.Generic;
 
 namespace Channels
 {
-    public struct MemoryEnumerable
-    {
-        private ReadableBuffer _buffer;
-
-        public MemoryEnumerable(ref ReadableBuffer buffer)
-        {
-            _buffer = buffer;
-        }
-
-        public MemoryEnumerator GetEnumerator()
-        {
-            return new MemoryEnumerator(ref _buffer);
-        }
-    }
     /// <summary>
     /// An enumerator over the <see cref="ReadableBuffer"/>
     /// </summary>
