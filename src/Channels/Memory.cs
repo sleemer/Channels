@@ -13,19 +13,7 @@ namespace Channels
         private readonly unsafe void* _memory;
         private readonly int _memoryLength;
 
-        public Memory(ArraySegment<T> segment)
-        {
-            _array = segment.Array;
-            _offset = segment.Offset;
-            unsafe
-            {
-                _memory = null;
-            }
-
-            _memoryLength = segment.Count;
-        }
-
-        public unsafe Memory(void* pointer, int length)
+        public unsafe Memory(void* pointer, int offset, int length)
         {
             unsafe
             {
@@ -33,7 +21,7 @@ namespace Channels
             }
 
             _array = null;
-            _offset = 0;
+            _offset = offset;
             _memoryLength = length;
         }
 
@@ -80,7 +68,7 @@ namespace Channels
             // TODO: Bounds check
             if (_array == null)
             {
-                return new Memory<T>((byte*)_memory + (Unsafe.SizeOf<T>() * offset), length);
+                return new Memory<T>(_memory, offset, length);
             }
 
             return new Memory<T>(_array, _offset + offset, length, _memory);
