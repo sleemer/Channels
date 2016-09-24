@@ -70,7 +70,7 @@ namespace Channels
             }
         }
 
-        public unsafe byte* UnsafePointer => _memory;
+        public unsafe byte* UnsafePointer => _memory + _offset;
 
         public int Length => _memoryLength;
 
@@ -82,7 +82,7 @@ namespace Channels
                 return new Memory(_memory + offset, length);
             }
 
-            return new Memory(_array, _offset + offset, length, (_memory == null ? null : _memory + offset));
+            return new Memory(_array, _offset + offset, length, _memory);
         }
 
         public bool TryGetArray(out ArraySegment<byte> buffer)
